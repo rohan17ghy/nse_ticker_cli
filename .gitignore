@@ -1,0 +1,6 @@
+dist
+
+*.lock
+.env
+node_modules
+*.log
