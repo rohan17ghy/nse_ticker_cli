@@ -2,44 +2,36 @@ import express from 'express';
 import 'dotenv-flow/config';
 import loginRoutes from './routes/login';
 import cors from 'cors';
-import { openInIncognito } from './utils/url-helper';
-
+import { getMarketData } from './sockets/market-data';
+import { getFirstCandleInfo } from './sockets/history';
+import { authenticateUser } from './fyers'
 
 const main = async () => {
     
     try{
-        
-        const fyersAPI = require('fyers-api-v3');
-        var fyers = new fyersAPI.fyersModel();
+        const app = express();
+        const port = 19232;
 
-        // Set your APPID obtained from Fyers API dashboard
-        // Set the RedirectURL where the authorization code will be sent after the user grants access
-        // Make sure your redirectURL matches with your server URL and port
-        fyers.setAppId(process.env.CLIENT_ID);
-        fyers.setRedirectUrl(process.env.REDIRECT_URL);
+        app.use(cors());
+        app.use('/login', loginRoutes);
+        app.use('/marketdata', async (req, res) => {
+            getMarketData();
+            //await getFirstCandleInfo();
+            return res.json('message: Created web socket for fetching market data');
+        })
+        app.use('/', (req, res) => {
+            return res.json({ message: "Welcome to the nse ticker cli" });
+        })    
 
-        console.log("AppID and RedirectURL set completed");
+        app.listen(port, () => {
+            console.log(`The server running at port ${port}`);
+        })
 
-        // Generate the URL to initiate the OAuth2 authentication process and get the authorization code URL
-        var authCodeURL = fyers.generateAuthCode();
-        console.log(`AuthCode URL: ${authCodeURL}`);
-
-        openInIncognito(authCodeURL);
+        authenticateUser();
 
     }catch(err){
         console.log("Error: ", err);
-    }
-
-
-    const app = express();
-    const port = 19232;
-
-    app.use(cors());
-    app.use('/login', loginRoutes);
-
-    app.listen(port, () => {
-        console.log(`The server running at port ${port}`);
-    })
+    }    
 }
 
 main()
