@@ -6,6 +6,7 @@ import { getHistoryCandles } from "./history";
 var fyerssocket: any = null;
 var lastHistoryFetchTimestamp: Date = new Date(0); // Represents DateTime.MinValue
 var historyCandles: any | undefined;
+var nextInterval: Date = new Date(0);
 
 
 export function getMarketData(symbol: any, interval: number, numberOfPrevCandles: number) {
@@ -14,14 +15,18 @@ export function getMarketData(symbol: any, interval: number, numberOfPrevCandles
 
     fyerssocket.on("message", async (message: any) => {
         const now = new Date();
-        console.log(`Now: ${now}`);
-        if(!historyCandles || now >= getNextInterval(interval)){
+        //console.log(`Now: ${now}`);
+        if(!historyCandles || now >= nextInterval){
             lastHistoryFetchTimestamp = now;
-            console.log(`inside the if statement`);
-            console.log(`LastHistotyFetchTime: ${lastHistoryFetchTimestamp}`);
+            nextInterval = getNextInterval(interval);
+            //console.log(`inside the if statement`);
+            //console.log(`LastHistotyFetchTime: ${lastHistoryFetchTimestamp}`);
             historyCandles = await getHistoryCandles(symbol, interval, numberOfPrevCandles);
+
+            //console.log(`*************************************History candles: ${JSON.stringify(historyCandles)}*************************************`);
         }
-        //console.clear();
+        console.clear();
+        console.log(`Next Interval: ${nextInterval}`);
         console.log(`Recieved message from server: ${JSON.stringify(message)}`);
         console.log(`History candles: ${JSON.stringify(historyCandles)}`);
     })

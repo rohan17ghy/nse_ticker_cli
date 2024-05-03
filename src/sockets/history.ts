@@ -35,12 +35,14 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
 
     try{
         fyers.setAccessToken(getAccessToken());
-        const now = new Date(/*new Date().getTime() - 80000*/);
-        const endTime = 1714622400 //now.getTime();
-        const startTimeStamp = 1714621800//now.getTime() - interval * numberOfPrevCandles * 60 * 1000;
+        const now = new Date();
+        
+        const endTime = convertToEpoch(now);//1714713300;//now.getTime() - 50000; //1714622400;
+        const startTimeStamp = convertToEpoch(new Date(now.getTime() - interval * numberOfPrevCandles * 60 * 1000));//1714708800;//now.getTime() - interval * numberOfPrevCandles * 60 * 1000; //1714621800;
         const startTime = startTimeStamp;
         
-        console.log(`symbol: ${symbol}, interval: ${interval}, startTime: ${startTime}, endTime: ${endTime} interval: ${interval} intervalType: ${typeof(interval)} numberOfPrevCandles: ${numberOfPrevCandles} prevCandlesType: ${typeof(numberOfPrevCandles)}`);
+        
+        //console.log(`symbol: ${symbol}, interval: ${interval}, startTime: ${startTime}, endTime: ${endTime} startTimeType: ${typeof(startTime)} EndTimeType: ${typeof(endTime)}`);
         const inp = {
             "symbol": symbol,
             "resolution":interval,
@@ -49,10 +51,10 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
             "range_to": endTime,
             "cont_flag":"1"
         }
-        console.log(`Inp: ${JSON.stringify(inp)}`);
+        //console.log(`Inp: ${JSON.stringify(inp)}`);
 
         const candles = await fyers.getHistory(inp);
-        console.log(`History candles: ${JSON.stringify(candles)}`);
+        //console.log(`History candles: ${JSON.stringify(candles)}`);
 
         return candles;
     }catch(err){

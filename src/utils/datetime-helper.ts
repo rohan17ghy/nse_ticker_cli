@@ -4,7 +4,7 @@ export function getNextInterval(timeframe: number): Date{
     }
 
     const time = new Date();
-    console.log(`Current time: ${time}`);
+    //console.log(`Current time: ${time}`);
 
     const minutes = time.getMinutes();
     const rem = minutes % timeframe
