@@ -1,6 +1,7 @@
 import { openInIncognito } from '../utils/url-helper';
 const fyersAPI = require('fyers-api-v3');
 const FyersSocket = require("fyers-api-v3").fyersDataSocket
+const FyersOrderSocket = require("fyers-api-v3").fyersOrderSocket
 
 const fyers = new fyersAPI.fyersModel();
 
@@ -20,5 +21,5 @@ export function authenticateUser(){
     openInIncognito(authCodeURL);
 }
 
-export { fyers, FyersSocket }
+export { fyers, FyersSocket, FyersOrderSocket }
 export { setAuthCode, getAuthCode, setAccessToken, getAccessToken } from './auth';
