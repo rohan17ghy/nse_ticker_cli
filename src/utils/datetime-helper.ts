@@ -22,3 +22,33 @@ export function getNextInterval(timeframe: number): Date{
     console.log(`Next history fetch time ${time}`);
     return time;
 }
+
+export function getMarketCloseTime(){
+    const now = new Date();
+
+    now.setHours(15);
+    now.setMinutes(30);
+    now.setSeconds(0);
+
+    return now;
+}
+
+export function getMarketOpenTime(){
+    const now = new Date();
+    now.setHours(9);
+    now.setMinutes(15);
+    now.setSeconds(0);
+
+    return now;
+}
+
+export function getPreviousDayCloseTime(){
+    const now = new Date();
+
+    now.setDate(now.getDate() - 1);
+    now.setHours(15);
+    now.setMinutes(30);
+    now.setSeconds(0);
+
+    return now;
+}

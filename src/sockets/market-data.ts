@@ -2,6 +2,7 @@ import { getAccessToken } from "../fyers";
 import { FyersSocket } from "../fyers";
 import { getNextInterval } from "../utils"; 
 import { getHistoryCandles } from "./history";
+import { logSymbol } from '../utils/logger';
 
 var fyersDataSocket: any = null;
 var lastHistoryFetchTimestamp: Date = new Date(0); // Represents DateTime.MinValue
@@ -30,6 +31,7 @@ export function getMarketData(symbol: any, interval: number, numberOfPrevCandles
         console.log(`Next Interval: ${nextInterval}`);
         console.log(`Recieved message from server: ${JSON.stringify(message)}`);
         console.log(`History candles: ${JSON.stringify(historyCandles)}`);
+        logSymbol(historyCandles);
     })
     fyersDataSocket.on("connect", () => {
         console.log('On Connect from server...');
