@@ -2,7 +2,7 @@ import { start } from "repl";
 import { fyers, getAccessToken } from "../fyers";
 import { getNearestOptionStrikes } from "../marketInfo";
 import { time } from "console";
-import { getMarketCloseTime, getMarketOpenTime, getPreviousDayCloseTime } from "../utils";
+import { getMarketCloseTime, getMarketOpenTime, getPreviousDayCloseTime, convertToEpoch } from "../utils";
 
 export async function getFirstCandleInfo(symbols: any[]): Promise<any> {
     fyers.setAccessToken(getAccessToken());
@@ -70,11 +70,4 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
     }catch(err){
         console.log(`Error: ${JSON.stringify(err)}`);
     }
-}
-
-
-
-function convertToEpoch(dateTime: Date): Number{
-    console.log(`DateTime: ${dateTime}`);
-    return Math.floor(dateTime.getTime() / 1000);
 }

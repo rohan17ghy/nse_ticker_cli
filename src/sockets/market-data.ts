@@ -13,7 +13,7 @@ export function getMarketData(symbol: any, interval: number, numberOfPrevCandles
     
     if(!fyersDataSocket){
         fyersDataSocket = new FyersSocket(getAccessToken());
-    }    
+    }
 
     fyersDataSocket.on("message", async (message: any) => {
         const now = new Date();
@@ -29,8 +29,9 @@ export function getMarketData(symbol: any, interval: number, numberOfPrevCandles
         }
         console.clear();
         console.log(`Next Interval: ${nextInterval}`);
-        console.log(`Recieved message from server: ${JSON.stringify(message)}`);
-        console.log(`History candles: ${JSON.stringify(historyCandles)}`);
+        //console.log(`Recieved message from server: ${JSON.stringify(message)}`);
+        console.log(`${message.symbol} LTP: ${message.ltp}`)
+        //console.log(`History candles: ${JSON.stringify(historyCandles)}`);
         logSymbol(historyCandles);
     })
     fyersDataSocket.on("connect", () => {

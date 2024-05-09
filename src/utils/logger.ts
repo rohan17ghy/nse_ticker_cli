@@ -1,4 +1,5 @@
 import {getCandleColor} from '../technicals/candlesticks';
+import { convertToLocalTime } from './datetime-helper';
 
 const whitespaces = "   ";
 
@@ -41,10 +42,14 @@ const whitespaces = "   ";
 function logCandlesForSymbols(candles: any[]){
     console.log(`Candles: ${JSON.stringify(candles)}`);
     const candlesLogObject = candles.map((candle) => {
+        let candleStartTime = convertToLocalTime(candle[0]);
         return {
             high: `${candle[2]}`,
             color: `${getCandleColor(candle[1], candle[2], candle[3], candle[4])}`,
-            low: `${candle[3]}`
+            low: `${candle[3]}`,
+            empty: '',
+            time: `${candleStartTime}`
+
         };
     });
 

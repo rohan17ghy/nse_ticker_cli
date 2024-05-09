@@ -52,3 +52,15 @@ export function getPreviousDayCloseTime(){
 
     return now;
 }
+
+export function convertToEpoch(dateTime: Date): Number{
+    console.log(`DateTime: ${dateTime}`);
+    return Math.floor(dateTime.getTime() / 1000);
+}
+
+//Converting epoch to datetime
+export function convertToLocalTime(epoch: number){
+    let utcTime = new Date(epoch * 1000);
+    let localTime = utcTime.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+    return localTime;
+}
