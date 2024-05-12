@@ -3,6 +3,7 @@ import { FyersSocket } from "../fyers";
 import { getNextInterval } from "../utils"; 
 import { getHistoryCandles } from "./history";
 import { logSymbol } from '../utils/logger';
+import { getRunningCandleColor } from '../technicals/candlesticks';
 
 var fyersDataSocket: any = null;
 var lastHistoryFetchTimestamp: Date = new Date(0); // Represents DateTime.MinValue
@@ -30,7 +31,7 @@ export function getMarketData(symbol: any, interval: number, numberOfPrevCandles
         console.clear();
         console.log(`Next Interval: ${nextInterval}`);
         //console.log(`Recieved message from server: ${JSON.stringify(message)}`);
-        console.log(`${message.symbol} LTP: ${message.ltp}`)
+        console.log(`${message.symbol} LTP: ${message.ltp} Color: ${getRunningCandleColor(message.open_price, message.high_price, message.low_price, message.ltp)} High: ${message.high_price} Low: ${message.low_price}`);
         //console.log(`History candles: ${JSON.stringify(historyCandles)}`);
         logSymbol(historyCandles);
     })
