@@ -1,7 +1,7 @@
 import { getAccessToken } from "../fyers";
 import { FyersSocket } from "../fyers";
 import { getNextInterval } from "../utils"; 
-import { getHistoryCandles } from "./history";
+import { getHistoryCandles } from "../technicals/history";
 import { logSymbol } from '../utils/logger';
 import { getRunningCandleColor } from '../technicals/candlesticks';
 

@@ -4,7 +4,7 @@ import { getNearestOptionStrikes } from "../marketInfo";
 import { time } from "console";
 import { getMarketCloseTime, getMarketOpenTime, getPreviousDayCloseTime, convertToEpoch } from "../utils";
 
-export async function getFirstCandleInfo(symbols: any[]): Promise<any> {
+export async function getTodaysFirstCandleInfo(symbols: any[]): Promise<any> {
     fyers.setAccessToken(getAccessToken());
    
     const dateTime = new Date();
@@ -32,6 +32,7 @@ export async function getFirstCandleInfo(symbols: any[]): Promise<any> {
 }
 
 
+//Getting the past `numberOfPrevCandles` candles of `interval` interval for the symbol `symbol`  
 export async function getHistoryCandles(symbol: any, interval: number, numberOfPrevCandles: number){   
 
     try{
@@ -70,4 +71,38 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
     }catch(err){
         console.log(`Error: ${JSON.stringify(err)}`);
     }
+}
+
+//interval in minutes
+export async function getSingleCandle(symbol: any, interval: number, dateTime: Date){
+
+    //Need to find a way where we don't need to authenticate it for every request
+    fyers.setAccessToken(getAccessToken());
+
+    const startTimeEpoch = convertToEpoch(dateTime);
+    // const endTime = new Date(dateTime);
+
+    // let endMinutes = endTime.getMinutes() + interval;
+    // if(endMinutes >= 60){
+    //     endTime.setHours(endTime.getHours() + 1);
+    //     endMinutes %= 60;
+    // }
+
+    // endTime.setMinutes(endMinutes);
+    // const endTimeEpoch = convertToEpoch(endTime);
+
+    const inp = {
+        "symbol": symbol,
+        "resolution": interval,
+        "date_format":"0",
+        "range_from": startTimeEpoch,
+        "range_to": startTimeEpoch,
+        "cont_flag":"1"
+    }
+
+    console.log(`Input: ${JSON.stringify(inp)}`);
+
+    const candles = await fyers.getHistory(inp);
+    console.log(`Candles: ${JSON.stringify(candles)}`);
+    return candles;
 }
