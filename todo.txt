@@ -1,0 +1,6 @@
+Below observations were made:
+    -> From 11th July 2024 BN PE, 15thJuly BankNifty CE  we can see that not only 1st candle but second candles can also be different in color between different strikes.
+    -> Also we can see that in certain strikes the day high/low gets broken but in some others it doesn't
+    -> Mostly these are in effect in 1min timeframe and the beggining few candles.
+
+    TODO: Write code to handle above things 

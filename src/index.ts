@@ -6,6 +6,7 @@ import { getMarketData } from './sockets/market-data';
 import { recieveOrderDetails } from './sockets/orders';
 import { authenticateUser } from './fyers'
 import { candlestickRouter } from './routes/candlesticks';
+import { get1minCandles } from './technicals/history';
 
 const main = async () => {
     
@@ -17,6 +18,15 @@ const main = async () => {
         app.use(express.json())
 
         app.use('/candle', candlestickRouter);
+
+        app.use('/1mincandles', async (req, res) => {
+            const ceStart = req.body.ceStart;
+            const ceEnd = req.body.ceEnd;
+            const peStart = req.body.peStart;
+            const peEnd = req.body.peEnd;
+            await get1minCandles(ceStart, ceEnd, peStart, peEnd);
+            return res.json('message: Subscribed to the 1min candles');
+        });
 
         app.use('/marketdata', async (req, res) => {
             const symbol = req.body.symbol;
