@@ -1,36 +1,33 @@
-import { Candle } from "../technicals/candlesticks";
+import { AggrMessageType } from "../sockets/data_manager";
+import { Candle, CandleColor, createCandle } from "../technicals/candlesticks";
 
 export interface APIOptionChainData {
     symbol: string;
     data: Candle[];
 }
 
-export interface StrikeAggrOptionChainData {
+export interface AggrPremiumCandle {
     time: number;
-    data: {
+    aggrCandles: {
         symbol: string;
         candle: Candle;
     }[];
 }
 
-// export const transformOptionsData = (data: APIOptionChainData[]): StrikeAggrOptionChainData[] => {
-//     const groupedData = data.reduce((acc, { symbol, data }) => {
-//       data.forEach(([time, ...candle]) => {
-//         if (!acc.has(time)) {
-//           acc.set(time, []);
-//         }
-//         acc.get(time)?.push({ symbol, candle });
-//       });
-//       return acc;
-//     }, new Map<number, { symbol: string; candle: [number, number, number, number, number] }[]>());
-  
-//     return Array.from(groupedData, ([time, data]) => ({ time, data }));
-// };
+// export type ChartCandle = {
+//     time: number;
+//     open: number;
+//     high: number;
+//     low: number;
+//     close: number;
+//     color?: string;
+// }
 
-export const aggregateOptionsData = (data: APIOptionChainData[]): StrikeAggrOptionChainData[] => {
+
+export const aggregateOptionsData = (apiOptionChainData: APIOptionChainData[]): AggrPremiumCandle[] => {
     const groupedData: { [key: number]: { symbol: string, candle: Candle }[] } = {};
     
-    data.forEach(item => {
+    apiOptionChainData.forEach(item => {
       item.data.forEach(candle => {
         if (!groupedData[candle.time]) {
           groupedData[candle.time] = [];
@@ -42,14 +39,36 @@ export const aggregateOptionsData = (data: APIOptionChainData[]): StrikeAggrOpti
       });
     });
     
-    const result: StrikeAggrOptionChainData[] = Object.keys(groupedData).map(time => ({
+    const result: AggrPremiumCandle[] = Object.keys(groupedData).map(time => ({
       time: parseInt(time),
-      data: groupedData[parseInt(time)]
+      aggrCandles: groupedData[parseInt(time)]
     }));
   
     return result;
 };
-  
+
+export function transformToChartData(aggrPremiumCandles: AggrPremiumCandle[]): Candle[] {
+    return aggrPremiumCandles
+    .filter(candle => candle?.aggrCandles && candle.aggrCandles.length > 0)
+    .map(candle => {
+
+        const itmCandle = candle.aggrCandles
+        .reduce((max, currCandle) => currCandle.symbol > max.symbol ? currCandle : max, candle.aggrCandles[0])
+        ?.candle;
+        
+        //Finding a combined color. If both green and red color is present then color is set to blue
+        const color: CandleColor = candle.aggrCandles.reduce((color, currCandle) => {
+            if (currCandle.candle.color != color){
+                color = CandleColor.Blue;
+            }
+            return color
+        }, candle.aggrCandles[0].candle.color);
+
+        itmCandle.color = color
+
+        return itmCandle;
+    });
+}
 
 
 function incrementStrike(symbol: string) {
@@ -64,23 +83,39 @@ function decrementStrike(symbol: string){
     return symbol.substring(0, symbol.length - 7) + newStrike + symbol.substring(symbol.length - 2);
 }
 
-export function getCEStrikes(ceStrikeStart: string, ceStrikeEnd: string){
-    let currentStrike = ceStrikeStart;
-    const strikes = []
-    while(currentStrike >= ceStrikeEnd){
-        strikes.push(currentStrike);
-        currentStrike = decrementStrike(currentStrike);
-    }
+// export function getCEStrikes(ceStrikeStart: string, ceStrikeEnd: string){
+//     let currentStrike = ceStrikeStart;
+//     const strikes = []
+//     while(currentStrike >= ceStrikeEnd){
+//         strikes.push(currentStrike);
+//         currentStrike = decrementStrike(currentStrike);
+//     }
 
-    return strikes
-}
+//     return strikes
+// }
 
-export function getPEStrikes(peStrikeStart: string, peStrikeEnd: string){
-    let currentStrike = peStrikeStart;
-    const strikes = []
-    while(currentStrike <= peStrikeEnd){
+// export function getPEStrikes(peStrikeStart: string, peStrikeEnd: string){
+//     let currentStrike = peStrikeStart;
+//     const strikes = []
+//     while(currentStrike <= peStrikeEnd){
+//         strikes.push(currentStrike);
+//         currentStrike = incrementStrike(currentStrike);
+//     }
+
+//     return strikes;
+// }
+
+export function getStrikes(aggrInp: AggrMessageType) {
+    let currentStrike = aggrInp.start;
+    const strikes = [];
+
+    const isAscending = aggrInp.optionType === "CE";
+    const compareFn = isAscending ? (a: string, b: string) => a >= b : (a: string, b: string) => a <= b;
+    const updateFn = isAscending ? decrementStrike : incrementStrike;
+
+    while (compareFn(currentStrike, aggrInp.end)) {
         strikes.push(currentStrike);
-        currentStrike = incrementStrike(currentStrike);
+        currentStrike = updateFn(currentStrike);
     }
 
     return strikes;

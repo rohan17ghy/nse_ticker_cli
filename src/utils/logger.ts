@@ -1,4 +1,4 @@
-import {getCandleColor} from '../technicals/candlesticks';
+import {Candle, CandleColor, getCandleColor} from '../technicals/candlesticks';
 import { convertToLocalTime } from './datetime-helper';
 
 const whitespaces = "   ";
@@ -67,6 +67,51 @@ export function logSymbol(symbol: any){
 
 function transpose(matrix: any[]) {
     return matrix[0].map((_: any, colIndex: any) => matrix.map(row => row[colIndex]));
+}
+
+export function logChartDataInConsole(candles: Candle[]) {
+    const tableData = candles.map(candle => ({
+        Open: candle.open,
+        Close: candle.close,
+        Color: `${candle.color == CandleColor.Blue ? '<---------Blue--------->' : candle.color}`,
+        Time: new Date(candle.time).getTime()
+    }));    
+
+    console.table(tableData);
+}
+
+// Function to combine and log tables side by side
+export function logCombinedTables(ceCandles: Candle[], peCandles: Candle[]) {
+    const maxLength = Math.max(ceCandles.length, peCandles.length);
+    const combinedData = [];
+
+    for (let i = 0; i < maxLength; i++) {
+        const ce = ceCandles[i] || { open: '', close: '', color: '', time: '' };
+        const pe = peCandles[i] || { open: '', close: '', color: '', time: '' };
+
+        combinedData.push({
+            'CE Open': ce.open,
+            'CE Close': ce.close,
+            'CE Color': `${ce.color == CandleColor.Blue ? '<---------Blue--------->' : ce.color}`,
+            'CE Time': new Date(ce.time * 1000).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false
+            }),
+            '---': `|`,
+            '----': `|`,
+            'PE Open': pe.open,
+            'PE Close': pe.close,
+            'PE Color': `${pe.color == CandleColor.Blue ? '<---------Blue--------->' : pe.color}`,
+            'PE Time': new Date(pe.time * 1000).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false
+            })
+        });
+    }
+    console.clear();
+    console.table(combinedData);
 }
 
 

@@ -16,15 +16,17 @@
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "fs": "^0.0.1-security",
     "fyers-api-v3": "^1.1.1",
-    "ws": "^8.16.0"
+    "path": "^0.12.7",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/dotenv-flow": "^3.3.3",
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.7",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.11",
     "dotenv-flow": "^4.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"

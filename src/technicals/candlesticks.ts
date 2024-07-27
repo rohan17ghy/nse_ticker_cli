@@ -1,7 +1,9 @@
-export enum CandleColor{
-    Green,
-    Red
+export enum CandleColor {
+    Green = "Green",
+    Red = "Red",
+    Blue = "Blue"
 }
+
 
 export type Candle = {
     open: number,

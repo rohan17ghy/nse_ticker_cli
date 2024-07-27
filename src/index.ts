@@ -7,6 +7,7 @@ import { recieveOrderDetails } from './sockets/orders';
 import { authenticateUser } from './fyers'
 import { candlestickRouter } from './routes/candlesticks';
 import { get1minCandles } from './technicals/history';
+import { DataManager } from './sockets/data_manager';
 
 const main = async () => {
     
@@ -24,7 +25,7 @@ const main = async () => {
             const ceEnd = req.body.ceEnd;
             const peStart = req.body.peStart;
             const peEnd = req.body.peEnd;
-            await get1minCandles(ceStart, ceEnd, peStart, peEnd);
+            await get1minCandles({ type: "SUBSCRIBE_AGGR_OPTIONS", start: ceStart, end: ceEnd, optionType: "CE" });
             return res.json('message: Subscribed to the 1min candles');
         });
 
@@ -51,7 +52,11 @@ const main = async () => {
             console.log(`The server running at port ${port}`);
         });
 
+        const dataManager = DataManager.getInstance();
+
         authenticateUser();
+
+        
 
     }catch(err){
         console.log("Error: ", err);

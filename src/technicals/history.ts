@@ -3,9 +3,11 @@ import { fyers, getAccessToken } from "../fyers";
 import { getNearestOptionStrikes } from "../marketInfo";
 import { time } from "console";
 import { getMarketCloseTime, getMarketOpenTime, getPreviousDayCloseTime, convertToEpoch, MinuteEventEmitter } from "../utils";
-import { APIOptionChainData, getCEStrikes, getPEStrikes, aggregateOptionsData as aggregateOptionsData } from "../options/options";
+import { APIOptionChainData, aggregateOptionsData as aggregateOptionsData, transformToChartData, getStrikes } from "../options/options";
 import { getBNStrikes } from "../api/api";
 import { createCandle } from "./candlesticks";
+import { logChartDataInConsole, logCombinedTables } from "../utils/logger";
+import { AggrMessageType } from "../sockets/data_manager";
 
 export async function getTodaysFirstCandleInfo(symbols: any[]): Promise<any> {
     fyers.setAccessToken(getAccessToken());
@@ -76,72 +78,148 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
     }
 }
 
-const minuteEmitter = new MinuteEventEmitter();
+// const minuteEmitter = new MinuteEventEmitter();
 
-export async function get1minCandles(ceStart: string, ceEnd: string,  peStart: string, peEnd: string){ 
+// export async function get1minCandles(ceStart: string, ceEnd: string,  peStart: string, peEnd: string){ 
+//     try{
+//         fyers.setAccessToken(getAccessToken());
+//         const ceStrikes = getCEStrikes(ceStart, ceEnd);
+//         const peStrikes = getPEStrikes(peStart, peEnd);
+//         minuteEmitter.on('minuteEvent', async (now: Date) => {
+//             try{
+//                 console.log('Minute event triggered at', now.toLocaleTimeString());
+            
+//                 const nineFifteenAM = new Date();
+//                 nineFifteenAM.setHours(9, 15, 0, 0);
+                                                
+//                 now.setMinutes(now.getMinutes() - 1);
+
+//                 //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+//                 //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+//                 //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+//                 //nineFifteenAM.setDate(nineFifteenAM.getDate() - 1);
+
+//                 console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
+                
+//                 const ceApiOptionsChain: APIOptionChainData[] = await Promise.all(ceStrikes.map(async (strike) => {
+//                     console.log(`ceStrike: ${strike}`);
+
+//                     const inp = {
+//                         "symbol": strike,
+//                         "resolution":"1",
+//                         "date_format":"0",
+//                         "range_from": convertToEpoch(nineFifteenAM),
+//                         "range_to": convertToEpoch(now),
+//                         "cont_flag":"1"
+//                     }
+
+//                     const candles = await fyers.getHistory(inp);
+//                     return {
+//                         symbol: strike,
+//                         data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
+//                     }
+//                 }));
+
+//                 const peApiOptionsChain: APIOptionChainData[] = await Promise.all(peStrikes.map(async (strike) => {
+//                     console.log(`peStrike: ${strike}`);
+
+//                     const inp = {
+//                         "symbol": strike,
+//                         "resolution":"1",
+//                         "date_format":"0",
+//                         "range_from": convertToEpoch(nineFifteenAM),
+//                         "range_to": convertToEpoch(now),
+//                         "cont_flag":"1"
+//                     }
+
+//                     const candles = await fyers.getHistory(inp);
+//                     return {
+//                         symbol: strike,
+//                         data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
+//                     }
+//                 }));
+
+//                 const ceCandles = transformToChartData(aggregateOptionsData(ceApiOptionsChain));
+//                 const peCandles = transformToChartData(aggregateOptionsData(peApiOptionsChain));
+                
+//                 //console.log(`ceCandles: ${JSON.stringify(ceCandles)}, peCandles: ${JSON.stringify(peCandles)}`);
+                
+//                 console.clear();
+
+//                 // Add a short delay to ensure console is cleared
+//                 //await new Promise(resolve => setTimeout(resolve, 10000)); // 100ms delay
+
+//                 // console.log(`CE Candles`);
+//                 // logChartDataInConsole(ceCandles);
+
+//                 // console.log(`PE Candles`);
+//                 // logChartDataInConsole(peCandles);
+
+//                 logCombinedTables(ceCandles, peCandles);
+
+//                 //console.log(`ceCandles: ${JSON.stringify(ceCandles)}`);
+                
+//             }catch(err){
+//                 console.log(`Error while getting 1min candles in event handler: ${JSON.stringify(err)}`);
+//             }
+            
+//         });
+//     }catch(err){
+//         console.log(`Error while getting 1min candles: ${JSON.stringify(err)}`);
+//     }   
+    
+// }
+
+export async function get1minCandles(aggrInp: AggrMessageType){ 
     try{
         fyers.setAccessToken(getAccessToken());
-        const ceStrikes = getCEStrikes(ceStart, ceEnd);
-        const peStrikes = getPEStrikes(peStart, peEnd);
-        minuteEmitter.on('minuteEvent', async (now: Date) => {
-            try{
-                console.log('Minute event triggered at', now.toLocaleTimeString());
+        // const ceStrikes = getCEStrikes(aggrInp);
+        // const peStrikes = getPEStrikes(aggrInp);
+        const strikes = getStrikes(aggrInp);
+
+        const now = new Date();
+        try{
+            console.log('Minute event triggered at', now.toLocaleTimeString());
+
+            const nineFifteenAM = new Date();
+            nineFifteenAM.setHours(9, 15, 0, 0);
+                                            
+            now.setMinutes(now.getMinutes() - 1);
+
+            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+            nineFifteenAM.setDate(nineFifteenAM.getDate() - 1);
+
+            console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
+
+            const optionsChain: APIOptionChainData[] = await Promise.all(strikes.map(async (strike) => {
+                console.log(`strike: ${strike}`);
+
+                const inp = {
+                    "symbol": strike,
+                    "resolution":"1",
+                    "date_format":"0",
+                    "range_from": convertToEpoch(nineFifteenAM),
+                    "range_to": convertToEpoch(now),
+                    "cont_flag":"1"
+                }
+
+                const candles = await fyers.getHistory(inp);
+                return {
+                    symbol: strike,
+                    data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
+                }
+            }));
             
-                const nineFifteenAM = new Date();
-                nineFifteenAM.setHours(9, 15, 0, 0);
-                                                
-                now.setMinutes(now.getMinutes() - 1);
+            //console.log(`optionsChain: ${JSON.stringify(optionsChain)}`);
 
-                console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
-                
-                const ceApiOptionsChain: APIOptionChainData[] = await Promise.all(ceStrikes.map(async (strike) => {
-                    console.log(`ceStrike: ${strike}`);
-
-                    const inp = {
-                        "symbol": strike,
-                        "resolution":"1",
-                        "date_format":"0",
-                        "range_from": convertToEpoch(nineFifteenAM),
-                        "range_to": convertToEpoch(now),
-                        "cont_flag":"1"
-                    }
-
-                    const candles = await fyers.getHistory(inp);
-                    return {
-                        symbol: strike,
-                        data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
-                    }
-                }));
-
-                const peApiOptionsChain: APIOptionChainData[] = await Promise.all(peStrikes.map(async (strike) => {
-                    console.log(`peStrike: ${strike}`);
-
-                    const inp = {
-                        "symbol": strike,
-                        "resolution":"1",
-                        "date_format":"0",
-                        "range_from": convertToEpoch(nineFifteenAM),
-                        "range_to": convertToEpoch(now),
-                        "cont_flag":"1"
-                    }
-
-                    const candles = await fyers.getHistory(inp);
-                    return {
-                        symbol: strike,
-                        data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
-                    }
-                }));
-
-                const ceOptionsChain = aggregateOptionsData(ceApiOptionsChain);
-                const peOptionsChain = aggregateOptionsData(peApiOptionsChain);
-                
-                console.log(`ceCandles: ${JSON.stringify(ceOptionsChain)}, peCandles: ${JSON.stringify(peOptionsChain)}`);
-                
-            }catch(err){
-                console.log(`Error while getting 1min candles in event handler: ${JSON.stringify(err)}`);
-            }
+            const candles = transformToChartData(aggregateOptionsData(optionsChain));            
+            return candles;
             
-        });
+        }catch(err){
+            console.log(`Error while getting 1min candles in event handler: ${JSON.stringify(err)}`);
+        }
     }catch(err){
         console.log(`Error while getting 1min candles: ${JSON.stringify(err)}`);
     }   
