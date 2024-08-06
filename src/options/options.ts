@@ -47,13 +47,19 @@ export const aggregateOptionsData = (apiOptionChainData: APIOptionChainData[]): 
     return result;
 };
 
-export function transformToChartData(aggrPremiumCandles: AggrPremiumCandle[]): Candle[] {
+export function transformToChartData(aggrPremiumCandles: AggrPremiumCandle[], optionType:"CE" | "PE"): Candle[] {
     return aggrPremiumCandles
     .filter(candle => candle?.aggrCandles && candle.aggrCandles.length > 0)
     .map(candle => {
 
         const itmCandle = candle.aggrCandles
-        .reduce((max, currCandle) => currCandle.symbol > max.symbol ? currCandle : max, candle.aggrCandles[0])
+        .reduce((max, currCandle) => {
+            if(optionType == "CE"){
+                return currCandle.symbol < max.symbol ? currCandle : max;
+            }else{
+                return currCandle.symbol > max.symbol ? currCandle : max;
+            }
+        }, candle.aggrCandles[0])
         ?.candle;
         
         //Finding a combined color. If both green and red color is present then color is set to blue

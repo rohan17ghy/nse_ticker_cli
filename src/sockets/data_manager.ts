@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { MinuteEventEmitter } from "../utils";
-import { get1minCandles } from "../technicals/history";
+import { get1minAggrCandles } from "../technicals/history";
 
 type WSMessageType = {
     type: "SUBSCRIBE" | "UNSUBSCRIBE",
@@ -51,7 +51,7 @@ export class DataManager {
 
                     const minuteEmitter = new MinuteEventEmitter(1);
                     minuteEmitter.on("minuteEvent", async (date) => {
-                        const candles = await get1minCandles(data);
+                        const candles = await get1minAggrCandles(data);
                         console.log(`Data: ${date},  Candles: ${JSON.stringify(candles)}`);
                         ws.send(JSON.stringify(candles));
                     });

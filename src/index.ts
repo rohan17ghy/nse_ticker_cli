@@ -6,7 +6,7 @@ import { getMarketData } from './sockets/market-data';
 import { recieveOrderDetails } from './sockets/orders';
 import { authenticateUser } from './fyers'
 import { candlestickRouter } from './routes/candlesticks';
-import { get1minCandles } from './technicals/history';
+import { get1minAggrCandles } from './technicals/history';
 import { DataManager } from './sockets/data_manager';
 
 const main = async () => {
@@ -20,13 +20,12 @@ const main = async () => {
 
         app.use('/candle', candlestickRouter);
 
-        app.use('/1mincandles', async (req, res) => {
-            const ceStart = req.body.ceStart;
-            const ceEnd = req.body.ceEnd;
-            const peStart = req.body.peStart;
-            const peEnd = req.body.peEnd;
-            await get1minCandles({ type: "SUBSCRIBE_AGGR_OPTIONS", start: ceStart, end: ceEnd, optionType: "CE" });
-            return res.json('message: Subscribed to the 1min candles');
+        app.post('/1mincandles', async (req, res) => {
+            const start = req.body.start;
+            const end = req.body.end;
+            const optionType = req.body.optionType;
+            const candles = await get1minAggrCandles({ type: "SUBSCRIBE_AGGR_OPTIONS", start, end, optionType });
+            return res.json(candles);
         });
 
         app.use('/marketdata', async (req, res) => {
@@ -52,7 +51,7 @@ const main = async () => {
             console.log(`The server running at port ${port}`);
         });
 
-        const dataManager = DataManager.getInstance();
+        // const dataManager = DataManager.getInstance();
 
         authenticateUser();
 

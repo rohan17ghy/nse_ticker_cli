@@ -3,9 +3,9 @@ import { fyers, getAccessToken } from "../fyers";
 import { getNearestOptionStrikes } from "../marketInfo";
 import { time } from "console";
 import { getMarketCloseTime, getMarketOpenTime, getPreviousDayCloseTime, convertToEpoch, MinuteEventEmitter } from "../utils";
-import { APIOptionChainData, aggregateOptionsData as aggregateOptionsData, transformToChartData, getStrikes } from "../options/options";
+import { APIOptionChainData, aggregateOptionsData as aggregateOptionsData, transformToChartData as transformTosingleCandle, getStrikes } from "../options/options";
 import { getBNStrikes } from "../api/api";
-import { createCandle } from "./candlesticks";
+import { Candle, createCandle } from "./candlesticks";
 import { logChartDataInConsole, logCombinedTables } from "../utils/logger";
 import { AggrMessageType } from "../sockets/data_manager";
 
@@ -170,51 +170,54 @@ export async function getHistoryCandles(symbol: any, interval: number, numberOfP
     
 // }
 
-export async function get1minCandles(aggrInp: AggrMessageType){ 
+export async function get1minCandles(symbol: string): Promise<Candle[]> {
     try{
         fyers.setAccessToken(getAccessToken());
-        // const ceStrikes = getCEStrikes(aggrInp);
-        // const peStrikes = getPEStrikes(aggrInp);
-        const strikes = getStrikes(aggrInp);
-
         const now = new Date();
+        const nineFifteenAM = new Date();
+        nineFifteenAM.setHours(9, 15, 0, 0);
+
+        //For getting candles without the current running candle
+        //now.setMinutes(now.getMinutes() - 1);
+
+        //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+        //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+        //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
+        nineFifteenAM.setDate(nineFifteenAM.getDate());
+        console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
+        const inp = {
+            "symbol": symbol,
+            "resolution":"1",
+            "date_format":"0",
+            "range_from": convertToEpoch(nineFifteenAM),
+            "range_to": convertToEpoch(now),
+            "cont_flag":"1"
+        }
+
+        const candles = await fyers.getHistory(inp);
+        return candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'));
+
+    }
+    catch(err){
+        console.log(`Error while getting 1min candles: ${JSON.stringify(err)}`);
+        return []
+    } 
+}
+
+export async function get1minAggrCandles(aggrInp: AggrMessageType){ 
+    try{        
+        const strikes = getStrikes(aggrInp);
         try{
-            console.log('Minute event triggered at', now.toLocaleTimeString());
+            const optionsChain: APIOptionChainData[] = await Promise.all(strikes.map(async (strike) => {                
 
-            const nineFifteenAM = new Date();
-            nineFifteenAM.setHours(9, 15, 0, 0);
-                                            
-            now.setMinutes(now.getMinutes() - 1);
-
-            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
-            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
-            //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
-            nineFifteenAM.setDate(nineFifteenAM.getDate() - 1);
-
-            console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
-
-            const optionsChain: APIOptionChainData[] = await Promise.all(strikes.map(async (strike) => {
-                console.log(`strike: ${strike}`);
-
-                const inp = {
-                    "symbol": strike,
-                    "resolution":"1",
-                    "date_format":"0",
-                    "range_from": convertToEpoch(nineFifteenAM),
-                    "range_to": convertToEpoch(now),
-                    "cont_flag":"1"
-                }
-
-                const candles = await fyers.getHistory(inp);
+                const candles = await get1minCandles(strike);
                 return {
                     symbol: strike,
-                    data: candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'))
+                    data: candles
                 }
             }));
-            
-            //console.log(`optionsChain: ${JSON.stringify(optionsChain)}`);
 
-            const candles = transformToChartData(aggregateOptionsData(optionsChain));            
+            const candles = transformTosingleCandle(aggregateOptionsData(optionsChain), aggrInp.optionType);            
             return candles;
             
         }catch(err){
