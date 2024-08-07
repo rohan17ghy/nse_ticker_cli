@@ -7,7 +7,8 @@ import { APIOptionChainData, aggregateOptionsData as aggregateOptionsData, trans
 import { getBNStrikes } from "../api/api";
 import { Candle, createCandle } from "./candlesticks";
 import { logChartDataInConsole, logCombinedTables } from "../utils/logger";
-import { AggrMessageType } from "../sockets/data_manager";
+import { AggrMessageType } from "../sockets/aggrCandleManager";
+import { json } from "body-parser";
 
 export async function getTodaysFirstCandleInfo(symbols: any[]): Promise<any> {
     fyers.setAccessToken(getAccessToken());
@@ -183,8 +184,8 @@ export async function get1minCandles(symbol: string): Promise<Candle[]> {
         //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
         //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
         //****************************** NEED TO REMOVE THIS FOR REAL TIME DATA ******************************
-        nineFifteenAM.setDate(nineFifteenAM.getDate());
-        console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}`);
+        //nineFifteenAM.setDate(nineFifteenAM.getDate() - 1);
+        
         const inp = {
             "symbol": symbol,
             "resolution":"1",
@@ -193,9 +194,10 @@ export async function get1minCandles(symbol: string): Promise<Candle[]> {
             "range_to": convertToEpoch(now),
             "cont_flag":"1"
         }
-
+        
         const candles = await fyers.getHistory(inp);
-        return candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(candleApiData, '1min'));
+        //console.log(`nineFifteenAMEpoch: ${convertToEpoch(nineFifteenAM)}, nowEpoch: ${convertToEpoch(now)}, ${JSON.stringify(inp)} ${JSON.stringify(candles)}`);
+        return candles?.candles.map((candleApiData: [number, number, number, number, number, number]) => createCandle(symbol, candleApiData, '1min'));
 
     }
     catch(err){
@@ -206,9 +208,9 @@ export async function get1minCandles(symbol: string): Promise<Candle[]> {
 
 export async function get1minAggrCandles(aggrInp: AggrMessageType){ 
     try{        
-        const strikes = getStrikes(aggrInp);
+        const strikes = getStrikes(aggrInp); //["MCX:CRUDEOIL24AUG6450CE", "MCX:CRUDEOIL24AUG6400CE", "MCX:CRUDEOIL24AUG6350CE"]
         try{
-            const optionsChain: APIOptionChainData[] = await Promise.all(strikes.map(async (strike) => {                
+            const optionsChain: APIOptionChainData[] = await Promise.all(strikes.map(async (strike) => {
 
                 const candles = await get1minCandles(strike);
                 return {
@@ -217,7 +219,7 @@ export async function get1minAggrCandles(aggrInp: AggrMessageType){
                 }
             }));
 
-            const candles = transformTosingleCandle(aggregateOptionsData(optionsChain), aggrInp.optionType);            
+            const candles = transformTosingleCandle(aggrInp.symbol, aggrInp.optionType, aggregateOptionsData(optionsChain));
             return candles;
             
         }catch(err){

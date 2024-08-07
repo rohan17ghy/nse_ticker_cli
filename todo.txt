@@ -4,3 +4,8 @@ Below observations were made:
     -> Mostly these are in effect in 1min timeframe and the beggining few candles.
 
     TODO: Write code to handle above things 
+-----------------------------------------------
+    -> Create a trading algo to trade my option buying setip
+    -> It is difficult to monitor and enter in both option buying and option selling
+    -> I have missed many trades which were in my rules due to quick movement
+    -> Intention from creating this algo is to make option buying execution faster 

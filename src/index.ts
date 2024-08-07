@@ -1,13 +1,15 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import 'dotenv-flow/config';
 import loginRoutes from './routes/login';
 import cors from 'cors';
-import { getMarketData } from './sockets/market-data';
+import { getMarketData } from './sockets/ltpSocket';
 import { recieveOrderDetails } from './sockets/orders';
 import { authenticateUser } from './fyers'
 import { candlestickRouter } from './routes/candlesticks';
-import { get1minAggrCandles } from './technicals/history';
-import { DataManager } from './sockets/data_manager';
+import { get1minAggrCandles, get1minCandles } from './technicals/history';
+import { AggrCandleManager } from './sockets/aggrCandleManager';
+import { TradingEngineSocket } from './tradingEngine/tradingEngineSocket';
+import { tradingEngineRouter } from './routes/tradingEngine';
 
 const main = async () => {
     
@@ -20,13 +22,23 @@ const main = async () => {
 
         app.use('/candle', candlestickRouter);
 
-        app.post('/1mincandles', async (req, res) => {
+        app.post('/1minaggrcandles', async (req, res) => {
+            const symbol = req.body.symbol;
             const start = req.body.start;
             const end = req.body.end;
             const optionType = req.body.optionType;
-            const candles = await get1minAggrCandles({ type: "SUBSCRIBE_AGGR_OPTIONS", start, end, optionType });
+            const candles = await get1minAggrCandles({ type: "SUBSCRIBE_AGGR_OPTIONS", symbol, start, end, optionType });
             return res.json(candles);
         });
+
+        app.get('/1mincandles', async (req: Request, res: Response) => {
+            const symbol = req.query.symbol as string;
+            console.log(`Symbol: ${symbol}`);
+            const candles = await get1minCandles(symbol);
+            return res.json(candles);
+        });
+
+        app.use('/tradeengine', tradingEngineRouter);
 
         app.use('/marketdata', async (req, res) => {
             const symbol = req.body.symbol;
@@ -51,11 +63,7 @@ const main = async () => {
             console.log(`The server running at port ${port}`);
         });
 
-        // const dataManager = DataManager.getInstance();
-
-        authenticateUser();
-
-        
+        authenticateUser();                
 
     }catch(err){
         console.log("Error: ", err);

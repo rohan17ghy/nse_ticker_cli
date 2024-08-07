@@ -6,6 +6,7 @@ export enum CandleColor {
 
 
 export type Candle = {
+    symbol: string,
     open: number,
     high: number,
     low: number,
@@ -16,8 +17,9 @@ export type Candle = {
     interval: string
 }
 
-export function createCandle([time, open, high, low, close, volume]: [number, number, number, number, number, number], interval : string): Candle {
+export function createCandle(symbol: string, [time, open, high, low, close, volume]: [number, number, number, number, number, number], interval : string): Candle {
     return {
+        symbol,
         open,
         high,
         low,
@@ -35,6 +37,14 @@ export function getCandleColor(o: number, h: number, l: number, c: number) {
 
 export function getRunningCandleColor(o: number, h: number, l: number, ltp: number){
     return ltp - o > 0 ? CandleColor.Green: CandleColor.Red;
+}
+
+export function isGreenCandle(candle: Candle) {
+    return candle.color == CandleColor.Green || candle.color == CandleColor.Blue
+}
+
+export function isRedCandle(candle: Candle){
+    return candle.color == CandleColor.Red || candle.color == CandleColor.Blue
 }
 
 

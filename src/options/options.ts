@@ -1,4 +1,4 @@
-import { AggrMessageType } from "../sockets/data_manager";
+import { AggrMessageType } from "../sockets/aggrCandleManager";
 import { Candle, CandleColor, createCandle } from "../technicals/candlesticks";
 
 export interface APIOptionChainData {
@@ -47,20 +47,21 @@ export const aggregateOptionsData = (apiOptionChainData: APIOptionChainData[]): 
     return result;
 };
 
-export function transformToChartData(aggrPremiumCandles: AggrPremiumCandle[], optionType:"CE" | "PE"): Candle[] {
+export function transformToChartData(symbol: string, optionType:"CE" | "PE", aggrPremiumCandles: AggrPremiumCandle[]): Candle[] {
     return aggrPremiumCandles
     .filter(candle => candle?.aggrCandles && candle.aggrCandles.length > 0)
     .map(candle => {
 
-        const itmCandle = candle.aggrCandles
-        .reduce((max, currCandle) => {
-            if(optionType == "CE"){
-                return currCandle.symbol < max.symbol ? currCandle : max;
-            }else{
-                return currCandle.symbol > max.symbol ? currCandle : max;
-            }
-        }, candle.aggrCandles[0])
-        ?.candle;
+        // const itmCandle = candle.aggrCandles
+        // .reduce((max, currCandle) => {
+        //     if(optionType == "CE"){
+        //         return currCandle.symbol < max.symbol ? currCandle : max;
+        //     }else{
+        //         return currCandle.symbol > max.symbol ? currCandle : max;
+        //     }
+        // }, candle.aggrCandles[0])
+        // ?.candle;
+        const inpSymbol = candle.aggrCandles.filter(obj => obj.symbol == symbol)[0]?.candle;
         
         //Finding a combined color. If both green and red color is present then color is set to blue
         const color: CandleColor = candle.aggrCandles.reduce((color, currCandle) => {
@@ -70,9 +71,9 @@ export function transformToChartData(aggrPremiumCandles: AggrPremiumCandle[], op
             return color
         }, candle.aggrCandles[0].candle.color);
 
-        itmCandle.color = color
+        inpSymbol.color = color
 
-        return itmCandle;
+        return inpSymbol;
     });
 }
 
